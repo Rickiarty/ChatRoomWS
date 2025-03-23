@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: black;
+            color: white;
+        }
+        #chat {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            background-color: #333;
+            color: white;
+        }
+        #nickname, #message {
+            width: 80%;
+            margin-bottom: 10px;
+            background-color: #444;
+            color: white;
+            border: 1px solid #666;
+        }
+        #send {
+            width: 18%;
+            background-color: #555;
+            color: white;
+            border: 1px solid #777;
+        }
+        #send:hover {
+            background-color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Chat Client</h1>
+    <div id="chat"></div>
+    <input type="text" id="nickname" placeholder="Enter your nickname" />
+    <br />
+    <input type="text" id="message" placeholder="Type your message here..." />
+    <button id="send">Send</button>
+
+    <script>
+        const chat = document.getElementById('chat');
+        const nicknameInput = document.getElementById('nickname');
+        const messageInput = document.getElementById('message');
+        const sendButton = document.getElementById('send');
+
+        // 模擬內網IP (假設每位用戶有不同IP，實際應從伺服器側獲取或用戶端產生)
+        const internalIP = "192.168.0." + Math.floor(Math.random() * 255); // 模擬內網IP
+
+        // 建立 WebSocket 連線
+        const socket = new WebSocket('ws://localhost:8080/ws');
+
+        // 當連線建立時觸發
+        socket.addEventListener('open', () => {
+            chat.innerHTML += "<p><em>== You've connected to the server successfully ==</em></p>";
+        });
+
+        // 當收到訊息時觸發
+        socket.addEventListener('message', (event) => {
+            chat.innerHTML += `<p>${event.data}</p>`;
+            chat.scrollTop = chat.scrollHeight; // 自動滾動到底部
+        });
+
+        // 當連線關閉時觸發
+        socket.addEventListener('close', () => {
+            chat.innerHTML += "<p><em>You've disconnected from the server.</em></p>";
+        });
+
+        // 點擊 "Send" 按鈕時發送訊息
+        sendButton.addEventListener('click', () => {
+            const nickname = nicknameInput.value.trim();
+            const message = messageInput.value.trim();
+
+            if (!nickname) {
+                alert("Please enter a nickname!");
+                return;
+            }
+
+            if (message) {
+                const formattedMessage = `${internalIP} (${nickname}): ${message}`;
+                socket.send(formattedMessage);
+                messageInput.value = '';
+                chat.scrollTop = chat.scrollHeight; // 自動滾動到底部
+            }
+        });
+
+        // 按下 Enter 鍵也可發送訊息
+        messageInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+    </script>
+</body>
+</html>
